@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/renderer" },
+    { "path": "./packages/iframe-client" },
+    { "path": "./apps/editor" },
+    { "path": "./apps/web-component" },
+    { "path": "./apps/iframe-viewer" }
+  ]
+}

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>iframe-client demo host</title>
+  </head>
+  <body>
+    <p>This page embeds the iframe viewer via a real &lt;iframe&gt; and drives it with
+       <code>TopoIframeController</code>, simulating a third-party host site.</p>
+    <button id="clear-highlight">Clear highlight</button>
+    <iframe id="topo-frame" src="/" style="width: 500px; height: 750px; border: 1px solid #8888"></iframe>
+    <pre id="status" style="font-family: monospace; font-size: 12px"></pre>
+    <script type="module" src="/demo-host-main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "climb-topo-editor",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev:editor": "pnpm --filter @climb-topo/editor dev",
+    "dev:iframe-viewer": "pnpm --filter @climb-topo/iframe-viewer dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "typescript-eslint": "^8.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "jsdom": "^25.0.0"
+  }
+}
