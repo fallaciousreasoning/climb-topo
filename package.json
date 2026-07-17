@@ -1,6 +1,7 @@
 {
   "name": "climb-topo-editor",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=20"
