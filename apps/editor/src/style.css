@@ -38,11 +38,6 @@ body {
   border-bottom: 1px solid #8883;
 }
 
-.topo-editor__toolbar button.is-active {
-  font-weight: bold;
-  text-decoration: underline;
-}
-
 .topo-editor__save-button {
   margin-left: auto;
 }

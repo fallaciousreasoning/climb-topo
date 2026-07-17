@@ -1,10 +1,7 @@
-export type EditorTool = "draw" | "select";
-
 export interface ToolbarCallbacks {
   onUndo(): void;
   onRedo(): void;
   onSave(): void;
-  onToolChange(tool: EditorTool): void;
   onResetZoom(): void;
   onToggleSidebar(): void;
 }
@@ -13,8 +10,6 @@ export class Toolbar {
   readonly root: HTMLElement;
   private readonly undoButton: HTMLButtonElement;
   private readonly redoButton: HTMLButtonElement;
-  private readonly drawButton: HTMLButtonElement;
-  private readonly selectButton: HTMLButtonElement;
 
   constructor(callbacks: ToolbarCallbacks) {
     this.root = document.createElement("div");
@@ -34,14 +29,6 @@ export class Toolbar {
     this.redoButton.textContent = "Redo";
     this.redoButton.onclick = callbacks.onRedo;
 
-    this.drawButton = document.createElement("button");
-    this.drawButton.textContent = "Draw";
-    this.drawButton.onclick = () => callbacks.onToolChange("draw");
-
-    this.selectButton = document.createElement("button");
-    this.selectButton.textContent = "Select";
-    this.selectButton.onclick = () => callbacks.onToolChange("select");
-
     const resetZoomButton = document.createElement("button");
     resetZoomButton.textContent = "Reset Zoom";
     resetZoomButton.onclick = callbacks.onResetZoom;
@@ -51,24 +38,11 @@ export class Toolbar {
     saveButton.className = "topo-editor__save-button";
     saveButton.onclick = callbacks.onSave;
 
-    this.root.append(
-      menuToggleButton,
-      this.drawButton,
-      this.selectButton,
-      this.undoButton,
-      this.redoButton,
-      resetZoomButton,
-      saveButton,
-    );
+    this.root.append(menuToggleButton, this.undoButton, this.redoButton, resetZoomButton, saveButton);
   }
 
   setUndoRedoEnabled(canUndo: boolean, canRedo: boolean): void {
     this.undoButton.disabled = !canUndo;
     this.redoButton.disabled = !canRedo;
-  }
-
-  setActiveTool(tool: EditorTool): void {
-    this.drawButton.classList.toggle("is-active", tool === "draw");
-    this.selectButton.classList.toggle("is-active", tool === "select");
   }
 }

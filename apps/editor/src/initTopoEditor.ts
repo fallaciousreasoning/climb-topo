@@ -6,12 +6,12 @@ import {
   generateId,
   type Topo,
 } from "@climb-topo/core";
-import type { PointTypeRenderer } from "@climb-topo/renderer";
+import { loadImageNaturalSize, type PointTypeRenderer } from "@climb-topo/renderer";
 import { ClimbListPanel } from "./ClimbListPanel.js";
 import { EditorStore } from "./EditorStore.js";
 import { PointPopup } from "./PointPopup.js";
 import { Stage, type SelectedPoint } from "./Stage.js";
-import { Toolbar, type EditorTool } from "./Toolbar.js";
+import { Toolbar } from "./Toolbar.js";
 
 export interface TopoEditorConfig {
   container: HTMLElement;
@@ -30,10 +30,15 @@ export interface TopoEditorHandle {
 
 const SAVE_EVENT = "topo-editor:save";
 
-export function initTopoEditor(config: TopoEditorConfig): TopoEditorHandle {
+export async function initTopoEditor(config: TopoEditorConfig): Promise<TopoEditorHandle> {
+  // Pixel dimensions are never authored/stored (see the comment on Topo.image) -- resolve them
+  // by loading the image once before anything that needs them (Viewport, TopoRenderer, the
+  // scaffold) gets constructed.
+  const { width, height } = await loadImageNaturalSize(config.initialData.image.backgroundUrl);
+  const image = { backgroundUrl: config.initialData.image.backgroundUrl, width, height };
+
   const store = new EditorStore(config.initialData);
   let activeClimbId: string | null = config.initialData.climbs[0]?.id ?? null;
-  let activeTool: EditorTool = "draw";
   let selection: SelectedPoint | null = null;
 
   const root = document.createElement("div");
@@ -53,10 +58,10 @@ export function initTopoEditor(config: TopoEditorConfig): TopoEditorHandle {
 
   const stage = new Stage(
     config.initialData,
+    image,
     {
       onExecute: (command) => store.execute(command),
       getActiveClimbId: () => activeClimbId,
-      getActiveTool: () => activeTool,
       onSwitchActiveClimb: (id) => setActiveClimb(id),
       onSelectionChange: (next) => {
         selection = next;
@@ -138,10 +143,6 @@ export function initTopoEditor(config: TopoEditorConfig): TopoEditorHandle {
     onUndo: () => store.commands.undo(),
     onRedo: () => store.commands.redo(),
     onSave: () => handleSave(),
-    onToolChange: (tool) => {
-      activeTool = tool;
-      toolbar.setActiveTool(tool);
-    },
     onResetZoom: () => stage.resetZoom(),
     onToggleSidebar: () => setSidebarOpen(!sidebar.root.classList.contains("is-open")),
   });
@@ -180,7 +181,6 @@ export function initTopoEditor(config: TopoEditorConfig): TopoEditorHandle {
     } else if (e.key === "Escape") {
       setActiveClimb(null);
     } else if (e.key === "Delete" || e.key === "Backspace") {
-      if (activeTool !== "select") return;
       removeSelectedPoint();
     }
   }
@@ -211,7 +211,6 @@ export function initTopoEditor(config: TopoEditorConfig): TopoEditorHandle {
   root.append(toolbar.root, body, pointPopup.root);
   config.container.appendChild(root);
 
-  toolbar.setActiveTool(activeTool);
   setActiveClimb(activeClimbId);
   renderAll();
 

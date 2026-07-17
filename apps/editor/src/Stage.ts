@@ -12,7 +12,6 @@ import {
   type PointTypeRenderer,
 } from "@climb-topo/renderer";
 import { resolveDrawClick } from "./drawClickRouting.js";
-import type { EditorTool } from "./Toolbar.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -40,13 +39,13 @@ export interface SelectedPoint {
 export interface StageCallbacks {
   onExecute(command: Command): void;
   getActiveClimbId(): string | null;
-  getActiveTool(): EditorTool;
   onSwitchActiveClimb(climbId: string): void;
   onSelectionChange(selection: SelectedPoint | null): void;
 }
 
-/** Ties the shared TopoRenderer to editor-specific pointer interaction: Draw and Select tools,
- *  plus pan/zoom (drag on empty space to pan, pinch or wheel/trackpad to zoom). */
+/** Ties the shared TopoRenderer to editor-specific pointer interaction: click/tap to draw,
+ *  drag a point to move it, plus pan/zoom (drag on empty space to pan, pinch or wheel/trackpad
+ *  to zoom). */
 export class Stage {
   readonly root: HTMLElement;
   private readonly renderer: TopoRenderer;
@@ -83,10 +82,15 @@ export class Stage {
   private selection: SelectedPoint | null = null;
   private readonly destroyScaffold: () => void;
 
-  constructor(topo: Topo, callbacks: StageCallbacks, pointTypeRenderers?: PointTypeRenderer[]) {
+  constructor(
+    topo: Topo,
+    image: { backgroundUrl: string; width: number; height: number },
+    callbacks: StageCallbacks,
+    pointTypeRenderers?: PointTypeRenderer[],
+  ) {
     this.topo = topo;
     this.callbacks = callbacks;
-    this.viewport = new Viewport(topo.image);
+    this.viewport = new Viewport(image);
 
     // Full-coverage rect so empty-stage taps register reliably — without an explicit painted
     // shape, unpainted svg regions don't receive pointer events, and the tap would otherwise
@@ -99,12 +103,12 @@ export class Stage {
     const background = document.createElementNS(SVG_NS, "rect") as SVGRectElement;
     background.setAttribute("x", "0");
     background.setAttribute("y", "0");
-    background.setAttribute("width", String(topo.image.width));
-    background.setAttribute("height", String(topo.image.height));
+    background.setAttribute("width", String(image.width));
+    background.setAttribute("height", String(image.height));
     background.setAttribute("fill", "rgba(0,0,0,0.01)");
     background.style.pointerEvents = "all";
 
-    const scaffold = createStageScaffold(topo.image, {
+    const scaffold = createStageScaffold(image, {
       fit: "contain",
       onResize: (width, height) => {
         this.viewport.setContainerAspect(width / height);
@@ -126,7 +130,7 @@ export class Stage {
 
     this.renderer = new TopoRenderer({
       svgRoot: this.svg,
-      image: topo.image,
+      image,
       mode: "edit",
       pointTypeRenderers,
       onClimbHover: () => {},
@@ -277,23 +281,18 @@ export class Stage {
       }
     }
 
-    if (this.callbacks.getActiveTool() === "draw") {
-      const activeClimbId = this.callbacks.getActiveClimbId();
-      if (!activeClimbId) {
-        this.renderer.setSnapTarget(null);
-        this.renderer.setHoveredPoint(null);
-        return;
-      }
-      const pos = this.normalizedPos(e);
-      const nearest = findNearestPoint(this.topo, pos, {
-        maxDistance: isTouchPointerType(e.pointerType) ? SNAP_THRESHOLD_TOUCH : SNAP_THRESHOLD_MOUSE,
-        excludeClimbId: activeClimbId,
-      });
-      this.renderer.setSnapTarget(nearest?.id ?? null);
-      this.renderer.setHoveredPoint(this.pointWrapperOf(e.target)?.dataset.pointId ?? null);
+    const activeClimbId = this.callbacks.getActiveClimbId();
+    if (!activeClimbId) {
+      this.renderer.setSnapTarget(null);
+      this.renderer.setHoveredPoint(null);
       return;
     }
-
+    const pos = this.normalizedPos(e);
+    const nearest = findNearestPoint(this.topo, pos, {
+      maxDistance: isTouchPointerType(e.pointerType) ? SNAP_THRESHOLD_TOUCH : SNAP_THRESHOLD_MOUSE,
+      excludeClimbId: activeClimbId,
+    });
+    this.renderer.setSnapTarget(nearest?.id ?? null);
     this.renderer.setHoveredPoint(this.pointWrapperOf(e.target)?.dataset.pointId ?? null);
   };
 
@@ -305,7 +304,6 @@ export class Stage {
     // eslint-disable-next-line no-console
     console.log(
       "[Stage] DEBUG pointerdown:",
-      "tool=", this.callbacks.getActiveTool(),
       "target=", e.target,
       "pointerType=", e.pointerType,
       "pointerId=", e.pointerId,
@@ -369,22 +367,23 @@ export class Stage {
     // actually hit can be a DIFFERENT climb than the one the user means to drag — checking
     // whether the point belongs to a climb's own pointIds is the only reliable membership
     // test, not which specific overlapping copy the pointerdown happened to land on.
-    let climbId = domClimbId;
-    if (this.callbacks.getActiveTool() === "draw") {
-      const activeClimbId = this.callbacks.getActiveClimbId();
-      const activeClimb = this.topo.climbs.find((c) => c.id === activeClimbId);
-      const belongsToActiveClimb = activeClimb?.pointIds.includes(pointId) ?? false;
-      if (!belongsToActiveClimb) {
-        // Not part of the active climb — leave it for the click-based "snap to link up" gesture.
-        // eslint-disable-next-line no-console
-        console.log(
-          "[Stage] DEBUG pointerdown: point isn't part of the active climb in draw mode, leaving it for click-based snap.",
-          { pointId, domClimbId, activeClimbId },
-        );
-        return;
-      }
-      climbId = activeClimbId!;
+    //
+    // Dragging is restricted to the active climb's own points: clicking a point that belongs
+    // to a DIFFERENT (non-active) climb is reserved for the "snap that point into my active
+    // climb" (link-up) click gesture instead — to edit a point on another climb, switch to it
+    // first (click its line), then drag/select its points here same as any other climb's.
+    const activeClimbId = this.callbacks.getActiveClimbId();
+    const activeClimb = this.topo.climbs.find((c) => c.id === activeClimbId);
+    const belongsToActiveClimb = activeClimb?.pointIds.includes(pointId) ?? false;
+    if (!belongsToActiveClimb) {
+      // eslint-disable-next-line no-console
+      console.log(
+        "[Stage] DEBUG pointerdown: point isn't part of the active climb, leaving it for click-based snap.",
+        { pointId, domClimbId, activeClimbId },
+      );
+      return;
     }
+    const climbId = activeClimbId!;
 
     const point = this.topo.points[pointId];
     if (!point) {
@@ -505,11 +504,6 @@ export class Stage {
   };
 
   private performDrawAction(e: PointerEvent): void {
-    if (this.callbacks.getActiveTool() !== "draw") {
-      // eslint-disable-next-line no-console
-      console.log("[Stage] DEBUG click ignored: tool is not 'draw'.");
-      return;
-    }
     const activeClimbId = this.callbacks.getActiveClimbId();
     if (!activeClimbId) {
       // eslint-disable-next-line no-console

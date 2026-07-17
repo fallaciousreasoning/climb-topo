@@ -114,6 +114,284 @@ describe("TopoRenderer", () => {
     expect(editSvg.querySelectorAll(".topo-climb__points > *").length).toBe(2);
   });
 
+  describe("reference label", () => {
+    it("renders the climb's reference code at its lowest (bottom) point", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      renderer.setTopo(
+        topo({
+          points: { p1: point("p1", 0.2, 0.1), p2: point("p2", 0.4, 0.8) }, // p2 has the larger y (lower)
+          climbs: [climb({ id: "a", reference: "SC", pointIds: ["p1", "p2"] })],
+        }),
+      );
+
+      const label = svgRoot.querySelector('[data-climb-id="a"] .topo-climb__reference')!;
+      expect(label.textContent).toBe("SC");
+      expect(Number(label.getAttribute("x"))).toBeCloseTo(40, 5); // p2.x * width
+      expect(Number(label.getAttribute("y"))).toBeGreaterThan(80); // below p2.y * height
+    });
+
+    it("hides the label entirely when the climb has no reference", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      renderer.setTopo(
+        topo({
+          points: { p1: point("p1", 0.2, 0.1), p2: point("p2", 0.4, 0.8) },
+          climbs: [climb({ id: "a", pointIds: ["p1", "p2"] })],
+        }),
+      );
+
+      const label = svgRoot.querySelector<SVGElement>('[data-climb-id="a"] .topo-climb__reference')!;
+      expect(label.style.display).toBe("none");
+    });
+
+    it("hides the label for a climb with a reference but no drawn points yet", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      renderer.setTopo(
+        topo({
+          points: {},
+          climbs: [climb({ id: "a", reference: "SC", pointIds: [] })],
+        }),
+      );
+
+      const label = svgRoot.querySelector<SVGElement>('[data-climb-id="a"] .topo-climb__reference')!;
+      expect(label.style.display).toBe("none");
+    });
+
+    it("spreads labels out side by side when climbs share the same bottom point", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      renderer.setTopo(
+        topo({
+          points: { shared: point("shared", 0.3, 0.9), p2: point("p2", 0.3, 0.5), p3: point("p3", 0.35, 0.5) },
+          climbs: [
+            climb({ id: "a", reference: "SC", pointIds: ["shared", "p2"] }),
+            climb({ id: "b", reference: "SCD", pointIds: ["shared", "p3"] }),
+          ],
+        }),
+      );
+
+      const labelA = svgRoot.querySelector('[data-climb-id="a"] .topo-climb__reference')!;
+      const labelB = svgRoot.querySelector('[data-climb-id="b"] .topo-climb__reference')!;
+      const xA = Number(labelA.getAttribute("x"));
+      const xB = Number(labelB.getAttribute("x"));
+      expect(xA).not.toBe(xB);
+      // Both should still be centered around the shared point's x (30), not off near either
+      // climb's own second point.
+      expect((xA + xB) / 2).toBeCloseTo(30, 1);
+    });
+
+    it("does not offset a label when it's the only climb anchored at that point", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      renderer.setTopo(
+        topo({
+          points: { p1: point("p1", 0.3, 0.9), p2: point("p2", 0.3, 0.5) },
+          climbs: [climb({ id: "a", reference: "SC", pointIds: ["p1", "p2"] })],
+        }),
+      );
+
+      const label = svgRoot.querySelector('[data-climb-id="a"] .topo-climb__reference')!;
+      expect(Number(label.getAttribute("x"))).toBeCloseTo(30, 5);
+    });
+  });
+
+  describe("shared-segment color priority", () => {
+    it("ties (equal point count) fall back to array order", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      const t = topo({
+        points: { p1: point("p1", 0.1, 0.1), p2: point("p2", 0.5, 0.5), p3: point("p3", 0.9, 0.9) },
+        climbs: [
+          climb({ id: "first", pointIds: ["p1", "p2", "p3"], grade: { system: "ewbank", value: "30" } }),
+          climb({ id: "second", pointIds: ["p1", "p2", "p3"], grade: { system: "ewbank", value: "10" } }),
+        ],
+      });
+      renderer.setTopo(t);
+
+      const firstLine = svgRoot.querySelector('[data-climb-id="first"] .topo-climb__line')!;
+      const secondLine = svgRoot.querySelector('[data-climb-id="second"] .topo-climb__line')!;
+      expect(firstLine.getAttribute("d")).toMatch(/^M /);
+      expect(secondLine.getAttribute("d")).toBe("");
+    });
+
+    it("still gives ownership to the actively-edited climb regardless of grade", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "edit" });
+      const t = topo({
+        points: { p1: point("p1", 0.1, 0.1), p2: point("p2", 0.5, 0.5) },
+        climbs: [
+          climb({ id: "easy", pointIds: ["p1", "p2"], grade: { system: "ewbank", value: "10" } }),
+          climb({ id: "active", pointIds: ["p1", "p2"], grade: { system: "ewbank", value: "30" } }),
+        ],
+      });
+      renderer.setTopo(t);
+      renderer.setActiveClimb("active");
+
+      const activeLine = svgRoot.querySelector('[data-climb-id="active"] .topo-climb__line')!;
+      const easyLine = svgRoot.querySelector('[data-climb-id="easy"] .topo-climb__line')!;
+      expect(activeLine.getAttribute("stroke")).toBe(EDITING_BLUE);
+      expect(activeLine.getAttribute("d")).toMatch(/^M /);
+      expect(easyLine.getAttribute("d")).toBe("");
+    });
+
+    it("prefers the climb with fewer points (less likely to be a link-up) over grade", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      const t = topo({
+        points: {
+          p1: point("p1", 0.1, 0.1),
+          p2: point("p2", 0.5, 0.5),
+          p3: point("p3", 0.9, 0.9),
+        },
+        climbs: [
+          // "linkup" has an easier grade but more points -- shortness should still win.
+          climb({
+            id: "linkup",
+            pointIds: ["p1", "p2", "p3"],
+            grade: { system: "ewbank", value: "10" },
+          }),
+          climb({ id: "base", pointIds: ["p1", "p2"], grade: { system: "ewbank", value: "30" } }),
+        ],
+      });
+      renderer.setTopo(t);
+
+      const baseLine = svgRoot.querySelector('[data-climb-id="base"] .topo-climb__line')!;
+      const linkupLine = svgRoot.querySelector('[data-climb-id="linkup"] .topo-climb__line')!;
+      expect(baseLine.getAttribute("d")).toMatch(/^M /);
+      // linkup only draws its own unique tail (p2->p3); base owns the shared p1->p2 edge.
+      expect(linkupLine.getAttribute("d")?.match(/^M /)).toBeTruthy();
+      expect(linkupLine.getAttribute("d")?.match(/C /g)?.length).toBe(1);
+    });
+  });
+
+  describe("hover", () => {
+    it("turns a climb EDITING_BLUE on hover in view mode, and reverts on hover-leave", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      renderer.setTopo(
+        topo({
+          points: { p1: point("p1", 0.1, 0.1), p2: point("p2", 0.5, 0.5) },
+          climbs: [climb({ id: "a", pointIds: ["p1", "p2"], grade: { system: "ewbank", value: "20" } })],
+        }),
+      );
+      const line = svgRoot.querySelector('[data-climb-id="a"] .topo-climb__line')!;
+      const hitArea = svgRoot.querySelector('[data-climb-id="a"] .topo-climb__hit-area')!;
+      const originalColor = line.getAttribute("stroke");
+
+      hitArea.dispatchEvent(new Event("pointermove", { bubbles: true }));
+      expect(svgRoot.querySelector('[data-climb-id="a"] .topo-climb__line')!.getAttribute("stroke")).toBe(
+        EDITING_BLUE,
+      );
+
+      svgRoot.dispatchEvent(new Event("pointerleave"));
+      expect(svgRoot.querySelector('[data-climb-id="a"] .topo-climb__line')!.getAttribute("stroke")).toBe(
+        originalColor,
+      );
+    });
+
+    it("also turns the climb blue when hovering its reference label instead of its line", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      renderer.setTopo(
+        topo({
+          points: { p1: point("p1", 0.1, 0.1), p2: point("p2", 0.5, 0.5) },
+          climbs: [
+            climb({
+              id: "a",
+              reference: "SC",
+              pointIds: ["p1", "p2"],
+              grade: { system: "ewbank", value: "20" },
+            }),
+          ],
+        }),
+      );
+      const label = svgRoot.querySelector('[data-climb-id="a"] .topo-climb__reference')!;
+
+      label.dispatchEvent(new Event("pointermove", { bubbles: true }));
+      expect(svgRoot.querySelector('[data-climb-id="a"] .topo-climb__line')!.getAttribute("stroke")).toBe(
+        EDITING_BLUE,
+      );
+
+      svgRoot.dispatchEvent(new Event("pointerleave"));
+      expect(
+        svgRoot.querySelector('[data-climb-id="a"] .topo-climb__line')!.getAttribute("stroke"),
+      ).not.toBe(EDITING_BLUE);
+    });
+
+    it("does not apply the hover-blue override in edit mode", () => {
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "edit" });
+      renderer.setTopo(
+        topo({
+          points: { p1: point("p1", 0.1, 0.1), p2: point("p2", 0.5, 0.5) },
+          climbs: [climb({ id: "a", pointIds: ["p1", "p2"], grade: { system: "ewbank", value: "20" } })],
+        }),
+      );
+      const hitArea = svgRoot.querySelector('[data-climb-id="a"] .topo-climb__hit-area')!;
+      const before = svgRoot.querySelector('[data-climb-id="a"] .topo-climb__line')!.getAttribute("stroke");
+
+      hitArea.dispatchEvent(new Event("pointermove", { bubbles: true }));
+      expect(svgRoot.querySelector('[data-climb-id="a"] .topo-climb__line')!.getAttribute("stroke")).toBe(
+        before,
+      );
+    });
+
+    it("highlights a climb's FULL path on hover via the overlay, without touching the owner's line", () => {
+      // Regression: "Mt Pleasant Butcher" shares its top segment with "Weet-bix Kids" -- before
+      // this fix, hovering the non-owning climb only highlighted its own unique portion,
+      // leaving the shared tail looking un-hovered even though it's part of the same route.
+      // A later regression (curve distortion, then over-highlighting a sibling's unrelated
+      // portion) means the hover-blue must be a separate overlay path, never a recomputed/
+      // recolored version of the owner's own line.
+      const svgRoot = createSvgRoot();
+      const renderer = new TopoRenderer({ svgRoot, image: { width: 100, height: 100 }, mode: "view" });
+      const t = topo({
+        points: { p1: point("p1", 0.1, 0.1), p2: point("p2", 0.5, 0.5), p3: point("p3", 0.9, 0.9) },
+        climbs: [
+          // "owner" has fewer points, so it normally owns the shared p2->p3 edge.
+          climb({ id: "owner", pointIds: ["p2", "p3"] }),
+          climb({ id: "other", pointIds: ["p1", "p2", "p3"] }),
+        ],
+      });
+      renderer.setTopo(t);
+
+      const ownerLine = svgRoot.querySelector('[data-climb-id="owner"] .topo-climb__line')!;
+      const otherLine = svgRoot.querySelector('[data-climb-id="other"] .topo-climb__line')!;
+      const ownerOverlay = svgRoot.querySelector('[data-climb-id="owner"] .topo-climb__hover-overlay')!;
+      const otherOverlay = svgRoot.querySelector('[data-climb-id="other"] .topo-climb__hover-overlay')!;
+
+      const ownerLineBefore = ownerLine.getAttribute("d");
+      const otherLineBefore = otherLine.getAttribute("d");
+      // Before hovering: neither overlay draws anything.
+      expect(ownerOverlay.getAttribute("d")).toBe("");
+      expect(otherOverlay.getAttribute("d")).toBe("");
+      // "other" only draws its own unique p1->p2 segment (owner has the shared p2->p3 edge).
+      expect(otherLineBefore?.match(/C /g)?.length).toBe(1);
+
+      const otherHitArea = svgRoot.querySelector('[data-climb-id="other"] .topo-climb__hit-area')!;
+      otherHitArea.dispatchEvent(new Event("pointermove", { bubbles: true }));
+
+      // The hovered climb's own line/label turn blue, but the line's `d` (its geometry) never
+      // changes -- no curve distortion.
+      expect(otherLine.getAttribute("stroke")).toBe(EDITING_BLUE);
+      expect(otherLine.getAttribute("d")).toBe(otherLineBefore);
+      expect(ownerLine.getAttribute("d")).toBe(ownerLineBefore);
+      // "other"'s overlay covers its own unique p1->p2 portion...
+      expect(otherOverlay.getAttribute("d")?.match(/C /g)?.length).toBe(1);
+      // ...and "owner"'s overlay covers just the shared p2->p3 segment it owns, using its own
+      // (already-correct) curve -- together the two overlays cover "other"'s full route, but
+      // "owner" itself never turns blue and none of its unrelated portions get swept in.
+      expect(ownerLine.getAttribute("stroke")).not.toBe(EDITING_BLUE);
+      expect(ownerOverlay.getAttribute("d")?.match(/C /g)?.length).toBe(1);
+
+      svgRoot.dispatchEvent(new Event("pointerleave"));
+      expect(otherOverlay.getAttribute("d")).toBe("");
+      expect(ownerOverlay.getAttribute("d")).toBe("");
+    });
+  });
+
   it("hides plain vertex points in view mode but keeps named features (bolt/anchor) visible", () => {
     const t = topo({
       points: {
@@ -180,10 +458,10 @@ describe("TopoRenderer", () => {
     );
 
     const hitPath = svgRoot.querySelector(".topo-climb__hit-area")!;
-    hitPath.dispatchEvent(new Event("pointerenter"));
+    hitPath.dispatchEvent(new Event("pointermove", { bubbles: true }));
     expect(onClimbHover).toHaveBeenCalledWith("a");
 
-    hitPath.dispatchEvent(new Event("pointerleave"));
+    svgRoot.dispatchEvent(new Event("pointerleave"));
     expect(onClimbHover).toHaveBeenLastCalledWith(null);
 
     hitPath.dispatchEvent(new Event("click"));
@@ -207,7 +485,7 @@ describe("TopoRenderer", () => {
       }),
     );
 
-    svgRoot.querySelector(".topo-climb__hit-area")!.dispatchEvent(new Event("pointerenter"));
+    svgRoot.querySelector(".topo-climb__hit-area")!.dispatchEvent(new Event("pointermove", { bubbles: true }));
     expect(onClimbHover).not.toHaveBeenCalled();
   });
 

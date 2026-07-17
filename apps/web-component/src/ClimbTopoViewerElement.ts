@@ -1,5 +1,11 @@
 import type { Topo } from "@climb-topo/core";
-import { createStageScaffold, PanZoomGestures, TopoRenderer, Viewport } from "@climb-topo/renderer";
+import {
+  createStageScaffold,
+  loadImageNaturalSize,
+  PanZoomGestures,
+  TopoRenderer,
+  Viewport,
+} from "@climb-topo/renderer";
 
 export const TAG_NAME = "climb-topo-viewer";
 
@@ -64,7 +70,7 @@ export class ClimbTopoViewerElement extends HTMLElement {
 
   set data(value: Topo | null) {
     this.topoData = value;
-    if (value) this.mount(value);
+    if (value) void this.mount(value);
   }
 
   get highlightedClimbId(): string | null {
@@ -82,7 +88,12 @@ export class ClimbTopoViewerElement extends HTMLElement {
     this.data = json;
   }
 
-  private mount(topo: Topo): void {
+  private async mount(topo: Topo): Promise<void> {
+    // Pixel dimensions are never authored/stored (see the comment on Topo.image) -- resolve
+    // them by loading the image once before anything that needs them gets constructed.
+    const { width, height } = await loadImageNaturalSize(topo.image.backgroundUrl);
+    const image = { backgroundUrl: topo.image.backgroundUrl, width, height };
+
     const shadow = this.shadowRoot;
     if (!shadow) return;
 
@@ -95,17 +106,17 @@ export class ClimbTopoViewerElement extends HTMLElement {
     style.textContent = HOST_STYLE;
     shadow.appendChild(style);
 
-    const scaffold = createStageScaffold(topo.image);
+    const scaffold = createStageScaffold(image);
     this.destroyScaffold = scaffold.destroy;
     shadow.appendChild(scaffold.root);
     this.panZoom = new PanZoomGestures({
       svgRoot: scaffold.svg,
-      viewport: new Viewport(topo.image),
+      viewport: new Viewport(image),
     });
 
     this.renderer = new TopoRenderer({
       svgRoot: scaffold.svg,
-      image: topo.image,
+      image,
       mode: "view",
       onClimbHover: (climbId) => {
         this.dispatchEvent(

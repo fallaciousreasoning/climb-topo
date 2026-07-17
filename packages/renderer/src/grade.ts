@@ -37,10 +37,23 @@ const vscaleNormalizer: GradeNormalizer = (value) => {
   return clamp01(Number(match[1]) / 12);
 };
 
+/** Reference ceiling used both to normalize a raw Ewbank number into the shared 0-1 scalar
+ *  and (in gradeToColor below) to place the discrete color bands at the equivalent normalized
+ *  cutoffs -- keeping both derived from the same constant is what makes "Ewbank grade 12" and
+ *  "the green/yellow boundary" line up exactly. */
+const EWBANK_MAX_GRADE = 40;
+
+const ewbankNormalizer: GradeNormalizer = (value) => {
+  const match = /^(\d+)/.exec(value.trim());
+  if (!match) return null;
+  return clamp01(Number(match[1]) / EWBANK_MAX_GRADE);
+};
+
 const gradeNormalizers: Record<string, GradeNormalizer> = {
   yds: ydsNormalizer,
   french: frenchNormalizer,
   vscale: vscaleNormalizer,
+  ewbank: ewbankNormalizer,
 };
 
 /** Registers or replaces the normalizer for a grading system, without touching renderer internals. */
@@ -56,11 +69,24 @@ export function normalizeGrade(grade: Grade | undefined): number | null {
   return normalizer(grade.value);
 }
 
-/** Generic, grading-system-independent gradient: green (easy) -> red (hard); gray if null. */
+/** Discrete difficulty bands, expressed as Ewbank-equivalent grade ceilings (normalized via
+ *  EWBANK_MAX_GRADE so they compare directly against any system's 0-1 scalar): grade 12 or
+ *  under is green, 18 or under yellow, 24 or under orange, 32 or under red, anything harder
+ *  purple. Gray if the grade is missing/unparseable. */
+const GRADE_BANDS: { maxGrade: number; color: string }[] = [
+  { maxGrade: 12, color: "#43a047" }, // green
+  { maxGrade: 18, color: "#fdd835" }, // yellow
+  { maxGrade: 24, color: "#fb8c00" }, // orange
+  { maxGrade: 32, color: "#e53935" }, // red
+];
+const HARDEST_BAND_COLOR = "#8e24aa"; // purple, above the top band
+
 export function gradeToColor(scalar: number | null): string {
   if (scalar === null) return NEUTRAL_GRAY;
-  const hue = 120 * (1 - scalar);
-  return `hsl(${hue.toFixed(0)}, 70%, 45%)`;
+  for (const band of GRADE_BANDS) {
+    if (scalar <= band.maxGrade / EWBANK_MAX_GRADE) return band.color;
+  }
+  return HARDEST_BAND_COLOR;
 }
 
 /**

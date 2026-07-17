@@ -1,17 +1,22 @@
 import { DEFAULT_POINT_TYPE, type Climb, type Topo, type TopoPoint } from "@climb-topo/core";
 import { toPixel } from "./coords.js";
-import { colorForClimb, type RenderMode } from "./grade.js";
+import { colorForClimb, EDITING_BLUE, type RenderMode } from "./grade.js";
 import {
   PointTypeRegistry,
   type PointTypeRenderer,
   type PointVisualState,
 } from "./pointTypeRenderers.js";
-import { computeEdgeOwnership, computeOwnedSegmentMask } from "./sharedSegments.js";
+import { computeEdgeOwnership, computeOwnedSegmentMask, edgeKey } from "./sharedSegments.js";
 import { buildSmoothPathFiltered } from "./spline.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const DEFAULT_POINT_RADIUS_RATIO = 0.006;
 const HIT_AREA_STROKE_WIDTH = 24;
+const REFERENCE_LABEL_FONT_SIZE_RATIO = 0.016;
+/** How far below the climb's lowest point the reference label sits, in point-radius units. */
+const REFERENCE_LABEL_OFFSET_RADIUS_MULTIPLIER = 3;
+/** Horizontal spacing (in font-size units) between labels that share the same anchor point. */
+const REFERENCE_LABEL_SLOT_WIDTH_RATIO = 2.2;
 
 export interface TopoRendererOptions {
   svgRoot: SVGSVGElement;
@@ -34,7 +39,12 @@ interface ClimbGroupRefs {
   hitPath: SVGPathElement;
   outlinePath: SVGPathElement;
   visiblePath: SVGPathElement;
+  /** Painted on top of visiblePath, in EDITING_BLUE, covering only whichever of this climb's
+   *  own (owned-and-drawn) segments are also part of the hovered climb's path -- see
+   *  computeHoverOverlayMask for why this can't just be a color swap on visiblePath itself. */
+  hoverOverlayPath: SVGPathElement;
   pointsGroup: SVGGElement;
+  referenceLabel: SVGTextElement;
 }
 
 export class TopoRenderer {
@@ -49,6 +59,10 @@ export class TopoRenderer {
   private topo: Topo | null = null;
   private readonly climbGroups = new Map<string, ClimbGroupRefs>();
   private highlightedClimbId: string | null = null;
+  /** The climb currently under the pointer, tracked regardless of mode so hover-changed
+   *  notifications stay deduplicated either way — but only consulted for color (turning
+   *  EDITING_BLUE, same as the editor's active-climb highlight) in view mode. */
+  private hoveredClimbId: string | null = null;
   private snapTargetPointId: string | null = null;
   private hoveredPointId: string | null = null;
   private selectedPointId: string | null = null;
@@ -63,6 +77,37 @@ export class TopoRenderer {
     this.pointTypes = new PointTypeRegistry(opts.pointTypeRenderers);
     this.onClimbHover = opts.onClimbHover;
     this.onClimbClick = opts.onClimbClick;
+
+    // Hover is tracked centrally here (continuously re-derived from whatever's actually under
+    // the pointer on every move) rather than via each climb's own pointerenter/pointerleave --
+    // with many adjacent/overlapping hit-areas, per-element leave events can be missed on fast
+    // pointer movement, which left a climb looking "stuck" highlighted until some other
+    // element's enter happened to fire. Sampling the real target on every move self-corrects
+    // regardless of any individual event that didn't fire.
+    if (this.interactive) {
+      this.svgRoot.addEventListener("pointermove", this.handleStagePointerMove);
+      this.svgRoot.addEventListener("pointerleave", this.handleStagePointerLeave);
+    }
+  }
+
+  private handleStagePointerMove = (e: PointerEvent): void => {
+    const climbId =
+      (e.target as Element | null)?.closest<SVGGElement>("[data-climb-id]")?.dataset.climbId ?? null;
+    this.setHoveredClimb(climbId);
+  };
+
+  private handleStagePointerLeave = (): void => {
+    this.setHoveredClimb(null);
+  };
+
+  private setHoveredClimb(climbId: string | null): void {
+    if (climbId === this.hoveredClimbId) return;
+    this.hoveredClimbId = climbId;
+    this.onClimbHover?.(climbId);
+    if (climbId) this.bringToFront(climbId);
+    // Only view mode's color logic (resolveColor) consults hoveredClimbId, but the field
+    // itself is tracked regardless of mode so notifications above stay deduplicated either way.
+    if (this.mode === "view") this.render();
   }
 
   setTopo(topo: Topo): void {
@@ -111,6 +156,8 @@ export class TopoRenderer {
   }
 
   destroy(): void {
+    this.svgRoot.removeEventListener("pointermove", this.handleStagePointerMove);
+    this.svgRoot.removeEventListener("pointerleave", this.handleStagePointerLeave);
     for (const refs of this.climbGroups.values()) {
       refs.group.remove();
     }
@@ -132,17 +179,68 @@ export class TopoRenderer {
     }
 
     // A segment (consecutive point pair) shared by more than one climb's path — a link-up
-    // sharing points with its base climb(s) — should paint once, not once per climb.
-    const edgeOwnership = computeEdgeOwnership(visibleClimbs);
+    // sharing points with its base climb(s) — should paint once, not once per climb, colored
+    // as the easier of the overlapping climbs (computeEdgeOwnership gives priority to
+    // whichever climb comes first, so sort easiest-first here rather than changing that
+    // function's own tie-breaking rule). The climb actively being edited still always wins,
+    // regardless of grade, so a shared segment never silently drops out of the edit-blue
+    // highlight for the climb you're actually drawing.
+    const edgeOwnership = computeEdgeOwnership(this.sortByEdgeOwnershipPriority(visibleClimbs));
+    // Climbs whose reference labels would otherwise land in the exact same spot (e.g. two
+    // climbs/link-ups starting from a shared point) — grouped so renderReferenceLabel can
+    // spread them out side by side instead of stacking them illegibly on top of each other.
+    const labelGroups = this.computeLabelGroups(visibleClimbs, topo);
 
     for (const climb of visibleClimbs) {
-      this.renderClimb(climb, topo, edgeOwnership);
+      this.renderClimb(climb, topo, edgeOwnership, labelGroups);
     }
 
     this.applyHighlight();
   }
 
-  private renderClimb(climb: Climb, topo: Topo, edgeOwnership: Map<string, string>): void {
+  /** Maps a point id to the ids (in a stable order) of every climb whose lowest point is that
+   *  point — i.e. every climb whose reference label would anchor there. */
+  private computeLabelGroups(climbs: readonly Climb[], topo: Topo): Map<string, string[]> {
+    const groups = new Map<string, string[]>();
+    for (const climb of climbs) {
+      if (!climb.reference) continue;
+      const points = climb.pointIds
+        .map((id) => topo.points[id])
+        .filter((p): p is TopoPoint => p !== undefined);
+      if (points.length === 0) continue;
+      const bottomPointId = points.reduce((lowest, p) => (p.y > lowest.y ? p : lowest)).id;
+      const group = groups.get(bottomPointId);
+      if (group) group.push(climb.id);
+      else groups.set(bottomPointId, [climb.id]);
+    }
+    return groups;
+  }
+
+  /** Priority order for computeEdgeOwnership's "first wins" rule (this also decides which
+   *  climb's hit-area exists on a shared segment, so it governs hover/click there too):
+   *  1. The actively-edited climb always comes first (so a shared segment never drops out of
+   *     its edit-blue highlight while you're drawing it).
+   *  2. Fewer points wins, always: a link-up typically incorporates a shared base route plus
+   *     extra points on top of it, so the climb with fewer points is the more fundamental
+   *     route — simpler and more natural-looking than factoring grade in as well. Ties (equal
+   *     point counts) fall back to array order. */
+  private sortByEdgeOwnershipPriority(climbs: readonly Climb[]): Climb[] {
+    return [...climbs].sort((a, b) => {
+      if (this.mode === "edit") {
+        const aActive = a.id === this.activeClimbId;
+        const bActive = b.id === this.activeClimbId;
+        if (aActive !== bActive) return aActive ? -1 : 1;
+      }
+      return a.pointIds.length - b.pointIds.length;
+    });
+  }
+
+  private renderClimb(
+    climb: Climb,
+    topo: Topo,
+    edgeOwnership: Map<string, string>,
+    labelGroups: Map<string, string[]>,
+  ): void {
     let refs = this.climbGroups.get(climb.id);
     if (!refs) {
       refs = this.createClimbGroup(climb.id);
@@ -157,14 +255,89 @@ export class TopoRenderer {
     const segmentMask = computeOwnedSegmentMask(climb, edgeOwnership);
     const d = buildSmoothPathFiltered(pixelPoints, segmentMask);
 
-    const color = colorForClimb(climb, this.mode, this.activeClimbId);
+    const color = this.resolveColor(climb);
 
     refs.hitPath.setAttribute("d", d);
     refs.outlinePath.setAttribute("d", d);
     refs.visiblePath.setAttribute("d", d);
     refs.visiblePath.setAttribute("stroke", color);
+    refs.hoverOverlayPath.setAttribute(
+      "d",
+      buildSmoothPathFiltered(pixelPoints, this.computeHoverOverlayMask(climb, segmentMask)),
+    );
 
+    this.renderReferenceLabel(refs, climb, points, pixelPoints, color, labelGroups);
     this.renderPoints(refs, climb, points, color);
+  }
+
+  /**
+   * Which of this climb's OWN (already owned-and-drawn) segments should also show the blue
+   * hover overlay: exactly the ones that are also an edge of the currently-hovered climb's own
+   * path. For the hovered climb itself this is every one of its owned segments (trivially all
+   * its own edges are its own edges), so its full visible line lights up; for a climb that
+   * merely shares an edge with the hovered one, only that specific shared segment lights up —
+   * never its own unrelated portions, and never a segment it doesn't already own and draw
+   * itself (which is what keeps this from redrawing another climb's geometry from scratch and
+   * subtly changing the curve's shape).
+   */
+  private computeHoverOverlayMask(climb: Climb, ownedSegmentMask: readonly boolean[]): boolean[] {
+    if (this.mode !== "view" || !this.hoveredClimbId) return ownedSegmentMask.map(() => false);
+
+    const hoveredClimb = this.topo?.climbs.find((c) => c.id === this.hoveredClimbId);
+    if (!hoveredClimb) return ownedSegmentMask.map(() => false);
+    const hoveredEdgeKeys = new Set<string>();
+    for (let i = 0; i < hoveredClimb.pointIds.length - 1; i++) {
+      hoveredEdgeKeys.add(edgeKey(hoveredClimb.pointIds[i]!, hoveredClimb.pointIds[i + 1]!));
+    }
+
+    return ownedSegmentMask.map((owned, i) => {
+      if (!owned) return false;
+      return hoveredEdgeKeys.has(edgeKey(climb.pointIds[i]!, climb.pointIds[i + 1]!));
+    });
+  }
+
+  /** The climb's short reference code (e.g. "SC"), shown at the bottom of its line -- the
+   *  common topo convention of labeling a route near its base. Skipped entirely if the climb
+   *  has no reference or isn't drawn yet. If another climb's label shares the same anchor
+   *  point (e.g. two climbs starting from the same spot), both are spread out side by side
+   *  around it instead of rendering exactly on top of each other. */
+  private renderReferenceLabel(
+    refs: ClimbGroupRefs,
+    climb: Climb,
+    points: TopoPoint[],
+    pixelPoints: { x: number; y: number }[],
+    color: string,
+    labelGroups: Map<string, string[]>,
+  ): void {
+    if (!climb.reference || points.length === 0) {
+      refs.referenceLabel.style.display = "none";
+      return;
+    }
+
+    let bottomIndex = 0;
+    for (let i = 1; i < points.length; i++) {
+      if (points[i]!.y > points[bottomIndex]!.y) bottomIndex = i;
+    }
+    const bottomPointId = points[bottomIndex]!.id;
+    const bottomPixel = pixelPoints[bottomIndex]!;
+
+    const fontSize = this.image.width * REFERENCE_LABEL_FONT_SIZE_RATIO;
+    const radius = this.image.width * DEFAULT_POINT_RADIUS_RATIO;
+
+    const siblings = labelGroups.get(bottomPointId) ?? [climb.id];
+    const indexInGroup = siblings.indexOf(climb.id);
+    const slotWidth = fontSize * REFERENCE_LABEL_SLOT_WIDTH_RATIO;
+    const xOffset = (indexInGroup - (siblings.length - 1) / 2) * slotWidth;
+
+    refs.referenceLabel.style.display = "";
+    refs.referenceLabel.textContent = climb.reference;
+    refs.referenceLabel.setAttribute("x", String(bottomPixel.x + xOffset));
+    refs.referenceLabel.setAttribute(
+      "y",
+      String(bottomPixel.y + radius * REFERENCE_LABEL_OFFSET_RADIUS_MULTIPLIER),
+    );
+    refs.referenceLabel.setAttribute("font-size", String(fontSize));
+    refs.referenceLabel.setAttribute("fill", color);
   }
 
   private createClimbGroup(climbId: string): ClimbGroupRefs {
@@ -200,25 +373,44 @@ export class TopoRenderer {
     visiblePath.setAttribute("vector-effect", "non-scaling-stroke");
     visiblePath.style.pointerEvents = "none";
 
+    const hoverOverlayPath = document.createElementNS(SVG_NS, "path") as SVGPathElement;
+    hoverOverlayPath.setAttribute("class", "topo-climb__hover-overlay");
+    hoverOverlayPath.setAttribute("fill", "none");
+    hoverOverlayPath.setAttribute("stroke", EDITING_BLUE);
+    hoverOverlayPath.setAttribute("stroke-width", String(LINE_STROKE_WIDTH));
+    hoverOverlayPath.setAttribute("vector-effect", "non-scaling-stroke");
+    hoverOverlayPath.style.pointerEvents = "none";
+
     const pointsGroup = document.createElementNS(SVG_NS, "g") as SVGGElement;
     pointsGroup.setAttribute("class", "topo-climb__points");
 
-    group.append(hitPath, outlinePath, visiblePath, pointsGroup);
+    // A white halo behind the colored fill (paint-order: stroke first) keeps the reference
+    // code legible over a photo background regardless of the climb's own color, the same
+    // reasoning as the line's black outline.
+    const referenceLabel = document.createElementNS(SVG_NS, "text") as SVGTextElement;
+    referenceLabel.setAttribute("class", "topo-climb__reference");
+    referenceLabel.setAttribute("text-anchor", "middle");
+    referenceLabel.setAttribute("font-weight", "bold");
+    referenceLabel.setAttribute("paint-order", "stroke");
+    referenceLabel.setAttribute("stroke", "#fff");
+    referenceLabel.setAttribute("stroke-width", "3");
+    // Also a hover target in its own right: in a cluster of tightly-packed lines, the label is
+    // often a much easier target than the thin line it belongs to, and hovering it should show
+    // that specific climb the same way hovering its line does.
+    referenceLabel.style.pointerEvents = this.interactive ? "all" : "none";
+    referenceLabel.style.cursor = this.interactive ? "pointer" : "";
 
+    group.append(hitPath, outlinePath, visiblePath, hoverOverlayPath, pointsGroup, referenceLabel);
+
+    // Hover itself is handled centrally (see handleStagePointerMove) rather than per element;
+    // only click stays wired here directly.
     if (this.interactive) {
-      hitPath.addEventListener("pointerenter", () => {
-        this.onClimbHover?.(climbId);
-        this.bringToFront(climbId);
-      });
-      hitPath.addEventListener("pointerleave", () => {
-        this.onClimbHover?.(null);
-      });
-      hitPath.addEventListener("click", () => {
-        this.onClimbClick?.(climbId);
-      });
+      const onClimbClick = (): void => this.onClimbClick?.(climbId);
+      hitPath.addEventListener("click", onClimbClick);
+      referenceLabel.addEventListener("click", onClimbClick);
     }
 
-    return { group, hitPath, outlinePath, visiblePath, pointsGroup };
+    return { group, hitPath, outlinePath, visiblePath, hoverOverlayPath, pointsGroup, referenceLabel };
   }
 
   private renderPoints(refs: ClimbGroupRefs, climb: Climb, points: TopoPoint[], color: string): void {
@@ -297,6 +489,18 @@ export class TopoRenderer {
     if (refs) this.svgRoot.appendChild(refs.group);
   }
 
+  /** The climb's usual grade/edit color, except in view mode while it is DIRECTLY the hovered
+   *  climb (not merely sharing a segment with it — see computeHoverOverlayMask for how a
+   *  shared segment gets highlighted instead), where it turns EDITING_BLUE for its label/point
+   *  markers — free hover feedback for read-only viewers, reusing the editor's active-climb
+   *  blue. The line itself is never recolored directly; it's always drawn in this color with
+   *  the hover overlay optionally painted on top, so a sibling climb's own unrelated portions
+   *  never get swept up into the highlight. */
+  private resolveColor(climb: Climb): string {
+    if (this.mode === "view" && this.hoveredClimbId === climb.id) return EDITING_BLUE;
+    return colorForClimb(climb, this.mode, this.activeClimbId);
+  }
+
   private refreshAllPointStates(): void {
     const topo = this.topo;
     if (!topo) return;
@@ -306,7 +510,7 @@ export class TopoRenderer {
       const points = climb.pointIds
         .map((id) => topo.points[id])
         .filter((p): p is TopoPoint => p !== undefined);
-      const color = colorForClimb(climb, this.mode, this.activeClimbId);
+      const color = this.resolveColor(climb);
       this.renderPoints(refs, climb, points, color);
     }
   }

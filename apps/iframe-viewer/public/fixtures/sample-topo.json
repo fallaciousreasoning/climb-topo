@@ -2,51 +2,813 @@
   "schemaVersion": 1,
   "id": "sample-topo",
   "image": {
-    "url": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1200'%3E%3Crect width='800' height='1200' fill='%235b5147'/%3E%3Crect x='40' y='60' width='720' height='1080' fill='%236b6156'/%3E%3Ctext x='400' y='640' font-size='28' fill='%23c9c2b8' text-anchor='middle'%3Eplaceholder crag photo%3C/text%3E%3C/svg%3E",
-    "width": 800,
-    "height": 1200
+    "backgroundUrl": "https://image.thecrag.com/2919x2000/46/5f/465f13e5f77b0f7785dc51c81e718adae6ba2991"
   },
   "points": {
-    "a1": { "id": "a1", "x": 0.3, "y": 0.85, "type": "vertex" },
-    "a2": { "id": "a2", "x": 0.32, "y": 0.6, "type": "vertex" },
-    "a3": { "id": "a3", "x": 0.28, "y": 0.35, "type": "vertex" },
-    "a4": { "id": "a4", "x": 0.35, "y": 0.12, "type": "vertex" },
-    "b1": { "id": "b1", "x": 0.6, "y": 0.9, "type": "vertex" },
-    "b2": { "id": "b2", "x": 0.55, "y": 0.55, "type": "vertex" },
-    "b3": { "id": "b3", "x": 0.5, "y": 0.2, "type": "vertex" }
+    "ea3a26d1-d251-4517-bbab-911157999efd": {
+      "id": "ea3a26d1-d251-4517-bbab-911157999efd",
+      "x": 0.44105531052183194,
+      "y": 0.9324821890737726,
+      "type": "vertex"
+    },
+    "4a1daf03-4b10-4956-9a06-1e2561c03baa": {
+      "id": "4a1daf03-4b10-4956-9a06-1e2561c03baa",
+      "x": 0.43659887200612524,
+      "y": 0.8358560837260464,
+      "type": "vertex"
+    },
+    "5b752af0-ce39-4c4b-b5dc-9b04bfda554c": {
+      "id": "5b752af0-ce39-4c4b-b5dc-9b04bfda554c",
+      "x": 0.4253728526598441,
+      "y": 0.7663326624861158,
+      "type": "vertex"
+    },
+    "5a23cc65-74e1-4842-99cd-8bf0d9e5415c": {
+      "id": "5a23cc65-74e1-4842-99cd-8bf0d9e5415c",
+      "x": 0.3760258166093324,
+      "y": 0.623197595733897,
+      "type": "vertex"
+    },
+    "4347ed82-e243-45f2-a376-7d34a2adc78f": {
+      "id": "4347ed82-e243-45f2-a376-7d34a2adc78f",
+      "x": 0.367525422997703,
+      "y": 0.5696650728990306,
+      "type": "vertex"
+    },
+    "0ac90e69-3623-4ca4-b2fa-6c69eaf3d42a": {
+      "id": "0ac90e69-3623-4ca4-b2fa-6c69eaf3d42a",
+      "x": 0.45498808381231737,
+      "y": 0.5101398979305733,
+      "type": "vertex"
+    },
+    "b41e8817-e532-454d-9f33-803c91665d48": {
+      "id": "b41e8817-e532-454d-9f33-803c91665d48",
+      "x": 0.4518149270470501,
+      "y": 0.41183364651518906,
+      "type": "vertex"
+    },
+    "fb9d5d9b-af26-4943-951a-c4b0968ef5e0": {
+      "id": "fb9d5d9b-af26-4943-951a-c4b0968ef5e0",
+      "x": 0.4428346507640379,
+      "y": 0.1776598454130765,
+      "type": "anchor"
+    },
+    "89ffd77b-dcb6-4a41-be37-7c4680e5201f": {
+      "id": "89ffd77b-dcb6-4a41-be37-7c4680e5201f",
+      "x": 0.5838311891384758,
+      "y": 0.9631104255858344,
+      "type": "vertex"
+    },
+    "020c091d-1836-48a8-b949-c8e5b4689c1e": {
+      "id": "020c091d-1836-48a8-b949-c8e5b4689c1e",
+      "x": 0.536371332132728,
+      "y": 0.6530428133526005,
+      "type": "vertex"
+    },
+    "c2bbf8c1-71f5-4d20-9b39-118352510069": {
+      "id": "c2bbf8c1-71f5-4d20-9b39-118352510069",
+      "x": 0.5215920242421628,
+      "y": 0.4682424849834467,
+      "type": "vertex"
+    },
+    "2a4e7038-7c5b-4985-90c1-779d98046f45": {
+      "id": "2a4e7038-7c5b-4985-90c1-779d98046f45",
+      "x": 0.31667673162157206,
+      "y": 0.9393208163936548,
+      "type": "vertex"
+    },
+    "43bf7f39-b4a1-4c8e-b427-a38691ab6aed": {
+      "id": "43bf7f39-b4a1-4c8e-b427-a38691ab6aed",
+      "x": 0.2801786888958385,
+      "y": 0.8363872774476713,
+      "type": "vertex"
+    },
+    "d6117338-ffdd-42ae-a8b7-c3ff58eb893b": {
+      "id": "d6117338-ffdd-42ae-a8b7-c3ff58eb893b",
+      "x": 0.2666071755939222,
+      "y": 0.7690201092407071,
+      "type": "vertex"
+    },
+    "9ef36285-b78b-44d4-ab5d-1704ce86870f": {
+      "id": "9ef36285-b78b-44d4-ab5d-1704ce86870f",
+      "x": 0.28269942090563027,
+      "y": 0.7084640249754667,
+      "type": "vertex"
+    },
+    "caa52292-3442-4e5a-b5c5-24534cfef961": {
+      "id": "caa52292-3442-4e5a-b5c5-24534cfef961",
+      "x": 0.2900513312700176,
+      "y": 0.5850027997649114,
+      "type": "vertex"
+    },
+    "6082a0b9-89f5-4955-b8e7-455aaa2bcea3": {
+      "id": "6082a0b9-89f5-4955-b8e7-455aaa2bcea3",
+      "x": 0.3228774627686534,
+      "y": 0.5373055383313023,
+      "type": "vertex"
+    },
+    "bfc7b94c-fdca-4698-9172-d836998b2d48": {
+      "id": "bfc7b94c-fdca-4698-9172-d836998b2d48",
+      "x": 0.30047664750730607,
+      "y": 0.47849255642665345,
+      "type": "vertex"
+    },
+    "2367143b-3b73-47ad-a8c0-28116f8fb8b1": {
+      "id": "2367143b-3b73-47ad-a8c0-28116f8fb8b1",
+      "x": 0.31918398378104407,
+      "y": 0.38628126112087646,
+      "type": "vertex"
+    },
+    "0d03df73-731b-4ebe-8b56-b801407c10e0": {
+      "id": "0d03df73-731b-4ebe-8b56-b801407c10e0",
+      "x": 0.31258424906449844,
+      "y": 0.17532259303792688,
+      "type": "anchor"
+    },
+    "2f22b65b-c81d-4a03-854f-d02927392ca6": {
+      "id": "2f22b65b-c81d-4a03-854f-d02927392ca6",
+      "x": 0.6750466402821063,
+      "y": 0.9345636815088806,
+      "type": "vertex"
+    },
+    "e2545bcb-3421-479e-8ab6-72f0a3768f76": {
+      "id": "e2545bcb-3421-479e-8ab6-72f0a3768f76",
+      "x": 0.6789045734436164,
+      "y": 0.7511287177427182,
+      "type": "vertex"
+    },
+    "956dd03a-d724-4a34-9619-670e76a231fa": {
+      "id": "956dd03a-d724-4a34-9619-670e76a231fa",
+      "x": 0.6128533068768804,
+      "y": 0.5019083626295413,
+      "type": "vertex"
+    },
+    "e780c476-ec9d-4db6-bcf6-e0f05ff8f4d3": {
+      "id": "e780c476-ec9d-4db6-bcf6-e0f05ff8f4d3",
+      "x": 0.5350637866517131,
+      "y": 0.35581041534114805,
+      "type": "vertex"
+    },
+    "70185d03-9f5b-46d6-ade6-6886fdde9273": {
+      "id": "70185d03-9f5b-46d6-ade6-6886fdde9273",
+      "x": 0.5969848270804801,
+      "y": 0.2071233905058718,
+      "type": "vertex"
+    },
+    "7bf757c0-1dcb-4fd6-8d98-918052361b4d": {
+      "id": "7bf757c0-1dcb-4fd6-8d98-918052361b4d",
+      "x": 0.5911588357722876,
+      "y": 0.16214505397332066,
+      "type": "anchor"
+    },
+    "383e872a-ace2-4d3d-a8e9-48ef437ed19c": {
+      "id": "383e872a-ace2-4d3d-a8e9-48ef437ed19c",
+      "x": 0.7408525735730229,
+      "y": 0.9368615862009468,
+      "type": "vertex"
+    },
+    "2ffc9460-45f7-4169-af95-357475e8a5dd": {
+      "id": "2ffc9460-45f7-4169-af95-357475e8a5dd",
+      "x": 0.7461690265391293,
+      "y": 0.729094015216055,
+      "type": "vertex"
+    },
+    "1c24c07e-3094-49f1-b354-3e8b32e3ba5e": {
+      "id": "1c24c07e-3094-49f1-b354-3e8b32e3ba5e",
+      "x": 0.7332418500824966,
+      "y": 0.49497530087025915,
+      "type": "vertex"
+    },
+    "10c2c483-c0fa-4550-8f42-168a8319b2f8": {
+      "id": "10c2c483-c0fa-4550-8f42-168a8319b2f8",
+      "x": 0.7320070957932083,
+      "y": 0.3596940316614724,
+      "type": "vertex"
+    },
+    "48c92a30-9c6a-45fe-8059-61cd018521fc": {
+      "id": "48c92a30-9c6a-45fe-8059-61cd018521fc",
+      "x": 0.6919368927327431,
+      "y": 0.16216472781486233,
+      "type": "anchor"
+    },
+    "2dffd8cf-542f-41f0-bf12-81a7abfaa30b": {
+      "id": "2dffd8cf-542f-41f0-bf12-81a7abfaa30b",
+      "x": 0.19470026204829022,
+      "y": 0.9159089449590753,
+      "type": "vertex"
+    },
+    "03521683-69bd-413b-87ea-67a4fcc97bb2": {
+      "id": "03521683-69bd-413b-87ea-67a4fcc97bb2",
+      "x": 0.1796917967022894,
+      "y": 0.6469281834014515,
+      "type": "vertex"
+    },
+    "54771105-0370-434a-ad74-159e07de2795": {
+      "id": "54771105-0370-434a-ad74-159e07de2795",
+      "x": 0.18111257292599023,
+      "y": 0.454077319073449,
+      "type": "vertex"
+    },
+    "3fd1f796-795e-4445-9199-f2301bd6a5a7": {
+      "id": "3fd1f796-795e-4445-9199-f2301bd6a5a7",
+      "x": 0.1841293634275485,
+      "y": 0.31138294637176345,
+      "type": "anchor"
+    },
+    "502c6a08-78a8-49b4-ae33-e37eb7db6d85": {
+      "id": "502c6a08-78a8-49b4-ae33-e37eb7db6d85",
+      "x": 0.1481920824751162,
+      "y": 0.9164794863637834,
+      "type": "vertex"
+    },
+    "752fd73d-ea3f-4099-aad8-b9541d69bc76": {
+      "id": "752fd73d-ea3f-4099-aad8-b9541d69bc76",
+      "x": 0.09255534826541285,
+      "y": 0.7997270411189356,
+      "type": "vertex"
+    },
+    "9d7f1186-135c-452a-9e4c-0de5a613c3c7": {
+      "id": "9d7f1186-135c-452a-9e4c-0de5a613c3c7",
+      "x": 0.08290916737660545,
+      "y": 0.6756283834424301,
+      "type": "vertex"
+    },
+    "17780e14-5da2-47e0-92ef-c6895cc41288": {
+      "id": "17780e14-5da2-47e0-92ef-c6895cc41288",
+      "x": 0.0789245236220897,
+      "y": 0.5360975644606442,
+      "type": "vertex"
+    },
+    "881817e3-7fa1-482e-a749-11166e0c0845": {
+      "id": "881817e3-7fa1-482e-a749-11166e0c0845",
+      "x": 0.1128182592660491,
+      "y": 0.41669308537598,
+      "type": "vertex"
+    },
+    "734cc83d-8d6d-41b7-82a2-bd0aa925dd85": {
+      "id": "734cc83d-8d6d-41b7-82a2-bd0aa925dd85",
+      "x": 0.1343374923164853,
+      "y": 0.3234744893832699,
+      "type": "anchor"
+    },
+    "0cbbfcef-c19a-4ed3-99ef-367fcb9cb632": {
+      "id": "0cbbfcef-c19a-4ed3-99ef-367fcb9cb632",
+      "x": 0.8369746902330396,
+      "y": 0.8862132485360883,
+      "type": "vertex"
+    },
+    "8bfdf937-973a-4285-9a9c-3a417e3068ad": {
+      "id": "8bfdf937-973a-4285-9a9c-3a417e3068ad",
+      "x": 0.859429424895666,
+      "y": 0.684969523406412,
+      "type": "vertex"
+    },
+    "b6efdce2-f213-495b-9769-76001407cd56": {
+      "id": "b6efdce2-f213-495b-9769-76001407cd56",
+      "x": 0.8539107741747636,
+      "y": 0.5530170681864748,
+      "type": "vertex"
+    },
+    "c108d6fa-7f0c-4c9d-b1a3-b5717b37042b": {
+      "id": "c108d6fa-7f0c-4c9d-b1a3-b5717b37042b",
+      "x": 0.8867692573141668,
+      "y": 0.42544794486202026,
+      "type": "vertex"
+    },
+    "31fb9e68-ce3e-4d19-ab45-96a6d7af87fc": {
+      "id": "31fb9e68-ce3e-4d19-ab45-96a6d7af87fc",
+      "x": 0.9001223970409032,
+      "y": 0.3450016067981581,
+      "type": "vertex"
+    },
+    "a48007af-9c71-4468-92a2-30333788301f": {
+      "id": "a48007af-9c71-4468-92a2-30333788301f",
+      "x": 0.8833696390635278,
+      "y": 0.28012908169867684,
+      "type": "anchor"
+    }
   },
   "climbs": [
     {
-      "id": "climb-a",
-      "name": "Sunny Corner",
-      "grade": { "system": "yds", "value": "5.9" },
-      "visible": true,
-      "reference": "SC",
-      "routeType": "trad",
-      "pointIds": ["a1", "a2", "a3", "a4"]
-    },
-    {
-      "id": "climb-b",
-      "name": "Steep Crimp",
-      "grade": { "system": "yds", "value": "5.12b" },
-      "visible": true,
-      "reference": "SCr",
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/endless-summer",
+      "name": "Endless Summer",
+      "grade": {
+        "system": "ewbank",
+        "value": "21"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/endless-summer",
       "routeType": "sport",
-      "pointIds": ["b1", "b2", "b3"]
+      "pointIds": [],
+      "reference": "ES"
     },
     {
-      "id": "climb-linkup",
-      "name": "Sunny Corner Direct (link-up)",
-      "grade": { "system": "yds", "value": "5.11a" },
-      "visible": true,
-      "reference": "SCD",
-      "routeType": "mixed",
-      "pointIds": ["a1", "a2", "a3", "a4", "b3"]
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/half-breed",
+      "name": "Half Breed",
+      "grade": {
+        "system": "ewbank",
+        "value": "20"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/half-breed",
+      "routeType": "sport",
+      "pointIds": []
     },
     {
-      "id": "climb-undrawn",
-      "name": "Not Yet Drawn",
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/tropical-storm",
+      "name": "Tropical Storm",
+      "grade": {
+        "system": "ewbank",
+        "value": "22"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/tropical-storm",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "TS"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/same-old-boring-bs",
+      "name": "Same Old Boring BS",
+      "grade": {
+        "system": "ewbank",
+        "value": "22"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/same-old-boring-bs",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/it-pointless-resist",
+      "name": "It Is Pointless To Resist",
+      "grade": {
+        "system": "ewbank",
+        "value": "22"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/it-pointless-resist",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "PR"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/nor-west-arch",
+      "name": "Nor West Arch",
+      "grade": {
+        "system": "ewbank",
+        "value": "26"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/nor-west-arch",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/it-pointless-resist-direct-start",
+      "name": "It Is Pointless To Resist Direct Start",
+      "grade": {
+        "system": "ewbank",
+        "value": "25"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/it-pointless-resist-direct-start",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/real-slim-shady",
+      "name": "Real Slim Shady",
+      "grade": {
+        "system": "ewbank",
+        "value": "25"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/real-slim-shady",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "RSS"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/deep-impact",
+      "name": "Deep Impact",
+      "grade": {
+        "system": "ewbank",
+        "value": "27"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/deep-impact",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/skunk",
+      "name": "Skunk",
+      "grade": {
+        "system": "ewbank",
+        "value": "21"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/skunk",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "S"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/dogs-life",
+      "name": "A Dog's Life",
+      "grade": {
+        "system": "ewbank",
+        "value": "22"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/dogs-life",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "DL"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/spatial-thing",
+      "name": "Spatial Thing",
+      "grade": {
+        "system": "ewbank",
+        "value": "24"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/spatial-thing",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/panda-monium",
+      "name": "Panda Monium",
+      "grade": {
+        "system": "ewbank",
+        "value": "25"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/panda-monium",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "PM"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/yorkshire-grit",
+      "name": "Yorkshire G(r)it",
+      "grade": {
+        "system": "ewbank",
+        "value": "26"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/yorkshire-grit",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "YG"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/peak-plonkers",
+      "name": "Peak Plonkers",
+      "grade": {
+        "system": "ewbank",
+        "value": "25"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/peak-plonkers",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/hushpuppy-hitched",
+      "name": "Hushpuppy Hitched",
+      "grade": {
+        "system": "ewbank",
+        "value": "26"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/hushpuppy-hitched",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "HH"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/silence-wombats",
+      "name": "Silence Of The Wombats",
+      "grade": {
+        "system": "ewbank",
+        "value": "28"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/silence-wombats",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "SW"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/great-white-wombat-hunt",
+      "name": "The Great White Wombat Hunt",
+      "grade": {
+        "system": "ewbank",
+        "value": "27"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/great-white-wombat-hunt",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "GWH"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/sport-all",
+      "name": "Sport for All",
+      "grade": {
+        "system": "ewbank",
+        "value": "26"
+      },
       "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/sport-all",
+      "routeType": "sport",
+      "pointIds": [
+        "502c6a08-78a8-49b4-ae33-e37eb7db6d85",
+        "752fd73d-ea3f-4099-aad8-b9541d69bc76",
+        "9d7f1186-135c-452a-9e4c-0de5a613c3c7",
+        "17780e14-5da2-47e0-92ef-c6895cc41288",
+        "881817e3-7fa1-482e-a749-11166e0c0845",
+        "734cc83d-8d6d-41b7-82a2-bd0aa925dd85"
+      ]
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/zimmerframe-owner-strikes-back",
+      "name": "The Zimmerframe Owner Strikes Back",
+      "grade": {
+        "system": "ewbank",
+        "value": "28"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/zimmerframe-owner-strikes-back",
+      "routeType": "sport",
+      "pointIds": [
+        "2dffd8cf-542f-41f0-bf12-81a7abfaa30b",
+        "03521683-69bd-413b-87ea-67a4fcc97bb2",
+        "54771105-0370-434a-ad74-159e07de2795",
+        "3fd1f796-795e-4445-9199-f2301bd6a5a7"
+      ],
+      "reference": "ZOB"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/wall-street-crumble",
+      "name": "Wall Street Crumble",
+      "grade": {
+        "system": "ewbank",
+        "value": "26"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/wall-street-crumble",
+      "routeType": "sport",
+      "pointIds": [
+        "2a4e7038-7c5b-4985-90c1-779d98046f45",
+        "43bf7f39-b4a1-4c8e-b427-a38691ab6aed",
+        "d6117338-ffdd-42ae-a8b7-c3ff58eb893b",
+        "9ef36285-b78b-44d4-ab5d-1704ce86870f",
+        "caa52292-3442-4e5a-b5c5-24534cfef961",
+        "6082a0b9-89f5-4955-b8e7-455aaa2bcea3",
+        "bfc7b94c-fdca-4698-9172-d836998b2d48",
+        "2367143b-3b73-47ad-a8c0-28116f8fb8b1",
+        "0d03df73-731b-4ebe-8b56-b801407c10e0"
+      ],
+      "reference": "WSC"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/thin-links-finish",
+      "name": "Thin Links Finish",
+      "grade": {
+        "system": "ewbank",
+        "value": "23"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/thin-links-finish",
+      "routeType": "sport",
+      "pointIds": [
+        "ea3a26d1-d251-4517-bbab-911157999efd",
+        "4a1daf03-4b10-4956-9a06-1e2561c03baa",
+        "5b752af0-ce39-4c4b-b5dc-9b04bfda554c",
+        "5a23cc65-74e1-4842-99cd-8bf0d9e5415c",
+        "4347ed82-e243-45f2-a376-7d34a2adc78f",
+        "0ac90e69-3623-4ca4-b2fa-6c69eaf3d42a",
+        "b41e8817-e532-454d-9f33-803c91665d48",
+        "2367143b-3b73-47ad-a8c0-28116f8fb8b1",
+        "0d03df73-731b-4ebe-8b56-b801407c10e0"
+      ]
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/mt-pleasant-butcher",
+      "name": "Mt Pleasant Butcher",
+      "grade": {
+        "system": "ewbank",
+        "value": "24"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/mt-pleasant-butcher",
+      "routeType": "sport",
+      "pointIds": [
+        "ea3a26d1-d251-4517-bbab-911157999efd",
+        "4a1daf03-4b10-4956-9a06-1e2561c03baa",
+        "5b752af0-ce39-4c4b-b5dc-9b04bfda554c",
+        "5a23cc65-74e1-4842-99cd-8bf0d9e5415c",
+        "4347ed82-e243-45f2-a376-7d34a2adc78f",
+        "0ac90e69-3623-4ca4-b2fa-6c69eaf3d42a",
+        "b41e8817-e532-454d-9f33-803c91665d48",
+        "fb9d5d9b-af26-4943-951a-c4b0968ef5e0"
+      ],
+      "reference": "MPB"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/weet-bix-kids",
+      "name": "Weet-bix Kids",
+      "grade": {
+        "system": "ewbank",
+        "value": "23"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/weet-bix-kids",
+      "routeType": "sport",
+      "pointIds": [
+        "89ffd77b-dcb6-4a41-be37-7c4680e5201f",
+        "020c091d-1836-48a8-b949-c8e5b4689c1e",
+        "c2bbf8c1-71f5-4d20-9b39-118352510069",
+        "b41e8817-e532-454d-9f33-803c91665d48",
+        "fb9d5d9b-af26-4943-951a-c4b0968ef5e0"
+      ],
+      "reference": "WK"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/weet-bix-suction",
+      "name": "Weet-bix Suction",
+      "grade": {
+        "system": "ewbank",
+        "value": "24"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/weet-bix-suction",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/liposuction",
+      "name": "Liposuction",
+      "grade": {
+        "system": "ewbank",
+        "value": "23"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/liposuction",
+      "routeType": "sport",
+      "pointIds": [
+        "2f22b65b-c81d-4a03-854f-d02927392ca6",
+        "e2545bcb-3421-479e-8ab6-72f0a3768f76",
+        "956dd03a-d724-4a34-9619-670e76a231fa",
+        "e780c476-ec9d-4db6-bcf6-e0f05ff8f4d3",
+        "70185d03-9f5b-46d6-ade6-6886fdde9273",
+        "7bf757c0-1dcb-4fd6-8d98-918052361b4d"
+      ],
+      "reference": "L"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/thorn-bird",
+      "name": "Thorn Bird",
+      "grade": {
+        "system": "ewbank",
+        "value": "25"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/thorn-bird",
+      "routeType": "sport",
+      "pointIds": [
+        "383e872a-ace2-4d3d-a8e9-48ef437ed19c",
+        "2ffc9460-45f7-4169-af95-357475e8a5dd",
+        "1c24c07e-3094-49f1-b354-3e8b32e3ba5e",
+        "10c2c483-c0fa-4550-8f42-168a8319b2f8",
+        "48c92a30-9c6a-45fe-8059-61cd018521fc"
+      ],
+      "reference": "TB"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/what-mad-pursuit",
+      "name": "What Mad Pursuit",
+      "grade": {
+        "system": "ewbank",
+        "value": "24"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/what-mad-pursuit",
+      "routeType": "sport",
+      "pointIds": [
+        "0cbbfcef-c19a-4ed3-99ef-367fcb9cb632",
+        "8bfdf937-973a-4285-9a9c-3a417e3068ad",
+        "b6efdce2-f213-495b-9769-76001407cd56",
+        "c108d6fa-7f0c-4c9d-b1a3-b5717b37042b",
+        "31fb9e68-ce3e-4d19-ab45-96a6d7af87fc",
+        "a48007af-9c71-4468-92a2-30333788301f"
+      ],
+      "reference": "MP"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/wave-mutilation",
+      "name": "Wave Of Mutilation",
+      "grade": {
+        "system": "ewbank",
+        "value": "22"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/wave-mutilation",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "WM"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/bird-lime",
+      "name": "Bird Lime",
+      "grade": {
+        "system": "ewbank",
+        "value": "23"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/bird-lime",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/lime-hill",
+      "name": "Lime Hill",
+      "grade": {
+        "system": "ewbank",
+        "value": "23"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/lime-hill",
+      "routeType": "sport",
+      "pointIds": []
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/noisy-neighbour",
+      "name": "Noisy Neighbour",
+      "grade": {
+        "system": "ewbank",
+        "value": "22"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/noisy-neighbour",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "NN"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/u-haul",
+      "name": "U Haul",
+      "grade": {
+        "system": "ewbank",
+        "value": "20"
+      },
+      "visible": false,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/u-haul",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "UH"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/disco-logic",
+      "name": "Disco Logic",
+      "grade": {
+        "system": "ewbank",
+        "value": "23"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/disco-logic",
+      "routeType": "sport",
+      "pointIds": [],
+      "reference": "DL"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/rimmer",
+      "name": "The Rimmer",
+      "grade": {
+        "system": "ewbank",
+        "value": "28"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/rimmer",
+      "routeType": "trad",
+      "pointIds": [],
+      "reference": "TR"
+    },
+    {
+      "id": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/new-new-thing",
+      "name": "The New New Thing",
+      "grade": {
+        "system": "ewbank",
+        "value": "22"
+      },
+      "visible": true,
+      "link": "https://climbnz.org.nz/nz/si/port-hills/britten-crags/alcove/new-new-thing",
+      "routeType": "sport",
       "pointIds": []
     }
   ]
