@@ -1,0 +1,14 @@
+{
+  "buildCommand": "pnpm run vercel-build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/edit", "destination": "/edit/index.html" },
+    { "source": "/edit/", "destination": "/edit/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/",
+      "headers": [{ "key": "Content-Security-Policy", "value": "frame-ancestors *;" }]
+    }
+  ]
+}

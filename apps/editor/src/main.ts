@@ -26,6 +26,24 @@ function downloadAsJsonFile(data: Topo, filename: string): void {
 }
 
 async function loadInitialData(): Promise<Topo> {
+  // A `?json=` or `?src=` link (same convention as the iframe viewer) loads specific data for
+  // this session, taking priority over any locally-saved draft -- e.g. for sharing a link
+  // straight to a particular topo's data for editing.
+  const params = new URLSearchParams(window.location.search);
+  const json = params.get("json");
+  if (json) {
+    try {
+      return JSON.parse(json) as Topo;
+    } catch (err) {
+      console.warn("Ignoring malformed ?json= topo JSON:", err);
+    }
+  }
+  const src = params.get("src");
+  if (src) {
+    const response = await fetch(src);
+    return (await response.json()) as Topo;
+  }
+
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     try {
