@@ -51,6 +51,13 @@ export class PanZoomGestures {
     this.svgRoot.removeEventListener("wheel", this.handleWheel);
   }
 
+  /** Re-applies the viewport's current viewBox to the svg. Exposed for a consumer that changes
+   *  the Viewport's state itself (e.g. `setContainerAspect` in response to a resize) and needs
+   *  the svg to reflect it immediately, rather than waiting for the next pan/zoom gesture. */
+  syncViewport(): void {
+    this.applyViewport();
+  }
+
   private applyViewport(): void {
     this.svgRoot.setAttribute("viewBox", this.viewport.getViewBox());
   }

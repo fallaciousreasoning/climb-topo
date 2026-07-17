@@ -30,7 +30,7 @@ export interface TopoRendererOptions {
   onClimbClick?(climbId: string): void;
 }
 
-const LINE_STROKE_WIDTH = 4;
+const LINE_STROKE_WIDTH = 2;
 /** 1px black border on each side of the visible line. */
 const LINE_OUTLINE_STROKE_WIDTH = LINE_STROKE_WIDTH + 2;
 
@@ -362,6 +362,7 @@ export class TopoRenderer {
     outlinePath.setAttribute("class", "topo-climb__outline");
     outlinePath.setAttribute("fill", "none");
     outlinePath.setAttribute("stroke", "#000");
+    outlinePath.setAttribute("stroke-opacity", "0.8");
     outlinePath.setAttribute("stroke-width", String(LINE_OUTLINE_STROKE_WIDTH));
     outlinePath.setAttribute("vector-effect", "non-scaling-stroke");
     outlinePath.style.pointerEvents = "none";

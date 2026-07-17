@@ -18,9 +18,10 @@ export interface IframeViewerAppOptions {
   postMessage: (message: IframeToParentMessage) => void;
   /** 'width' (default): fill the container's width and grow height freely -- right for the
    *  dynamic postMessage-driven protocol, where the host manages the iframe's height itself in
-   *  response to the `resize` message below. 'page': clamp to the container's available height
-   *  instead, shrinking width to match -- right when this page is the whole thing on screen
-   *  (opened directly, or a static `?src=` embed with a host-fixed iframe box). */
+   *  response to the `resize` message below. 'page': fill the whole of whatever box the
+   *  container actually is (both dimensions, no overflow/scrolling) -- right when this page is
+   *  the whole thing on screen (opened directly, or a static `?src=` embed with a host-fixed
+   *  iframe box). Zooming in then uses that entire box too, not just the letterboxed image. */
   fit?: "width" | "page";
 }
 
@@ -62,12 +63,31 @@ export class IframeViewerApp {
     this.destroyScaffold?.();
     this.container.replaceChildren();
 
-    const scaffold = createStageScaffold(image, { fit: this.fit });
+    const viewport = new Viewport(image);
+    // 'page' is presented externally as its own fit mode, but is really 'contain' plus keeping
+    // the Viewport's containerAspect in sync -- that's what lets a zoomed-in view actually use
+    // the full clamped box, rather than being stuck inside a smaller box shaped to the image's
+    // own aspect ratio (see Viewport.setContainerAspect and scaffold.ts's 'contain' fit).
+    const scaffold = createStageScaffold(
+      image,
+      this.fit === "page"
+        ? {
+            fit: "contain",
+            onResize: (boxWidth, boxHeight) => {
+              viewport.setContainerAspect(boxWidth / boxHeight);
+              // setContainerAspect only updates state -- push it onto the svg immediately
+              // (rather than waiting for the next pan/zoom gesture), or the image renders
+              // stretched to the box's real aspect until then.
+              this.panZoom?.syncViewport();
+            },
+          }
+        : { fit: "width" },
+    );
     this.destroyScaffold = scaffold.destroy;
     this.container.appendChild(scaffold.root);
     this.panZoom = new PanZoomGestures({
       svgRoot: scaffold.svg,
-      viewport: new Viewport(image),
+      viewport,
     });
 
     this.renderer = new TopoRenderer({

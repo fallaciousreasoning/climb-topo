@@ -93,9 +93,57 @@ only makes sense for small documents — it's the whole JSON document, URL-encod
 URL. Both also clamp the page to whatever height it's given (shrinking width to fit) rather than
 overflowing, matching this being the whole page rather than a dynamically-sized widget.
 
-**Dynamic, host-driven** — via `postMessage`, using the parent-side `TopoIframeController` from
-`@climb-topo/iframe-client` (or the raw protocol below, if you're not in a JS environment that can
-depend on it):
+**Dynamic, host-driven** — the iframe and the host page talk over `postMessage`. This is a plain
+`window.postMessage`/`message`-event protocol — no script from this project is required on the
+host side at all. Every message is a JSON-serializable object of the shape
+`{ source: "climb-topo-viewer", type: "...", payload: ... }`; check `source` before acting on a
+message, since your page's `message` listener will also see unrelated `postMessage` traffic (from
+other iframes/extensions/etc.).
+
+| Direction | `type` | `payload` | Notes |
+|---|---|---|---|
+| parent → iframe | `init` / `set-topo` | `Topo` | Both do the same thing (mount/replace the document); send either after `ready` (below). |
+| parent → iframe | `set-highlighted-climb` | `{ climbId: string \| null }` | |
+| iframe → parent | `ready` | — | Announced once on load, and a few more times over the following second (covers a host listener attached just after the first one fired). Don't post anything to the iframe until you've seen this at least once — it isn't listening before then. |
+| iframe → parent | `climb-hover` | `{ climbId: string \| null }` | `null` on hover-leave. |
+| iframe → parent | `climb-click` | `{ climbId: string }` | If the clicked climb has a `link` set, the iframe also opens it in a new tab as a side effect, independent of this message. |
+| iframe → parent | `resize` | `{ height: number }` | The document's rendered content height, for a host that wants to auto-size the `<iframe>` element to match. |
+
+A complete host-page integration with no dependencies:
+
+```html
+<iframe id="topo-frame" src="https://your-deployment/"></iframe>
+<script>
+  const SOURCE = "climb-topo-viewer";
+  const iframe = document.getElementById("topo-frame");
+
+  function post(message) {
+    // Pass the iframe's real origin instead of "*" once you know it, rather than broadcasting
+    // your topo data to any page that happens to occupy that frame.
+    iframe.contentWindow.postMessage({ source: SOURCE, ...message }, "*");
+  }
+
+  window.addEventListener("message", (e) => {
+    const msg = e.data;
+    if (!msg || msg.source !== SOURCE) return; // not one of ours -- ignore
+
+    if (msg.type === "ready") {
+      post({ type: "set-topo", payload: myTopoDocument });
+    } else if (msg.type === "climb-hover") {
+      console.log("hovering:", msg.payload.climbId);
+    } else if (msg.type === "climb-click") {
+      console.log("clicked:", msg.payload.climbId);
+      post({ type: "set-highlighted-climb", payload: { climbId: msg.payload.climbId } });
+    } else if (msg.type === "resize") {
+      iframe.style.height = `${msg.payload.height}px`;
+    }
+  });
+</script>
+```
+
+If your host page is already a JS bundle that can take a dependency, `@climb-topo/iframe-client`
+wraps the above in a small `TopoIframeController` class so you don't have to hand-roll the `ready`
+handshake or the `source` filtering:
 
 ```js
 import { TopoIframeController } from "@climb-topo/iframe-client";
@@ -104,28 +152,11 @@ const controller = new TopoIframeController({ iframe: document.querySelector("#t
 
 controller.addEventListener("climb-hover", (e) => console.log(e.detail.climbId));
 controller.addEventListener("climb-click", (e) => controller.setHighlightedClimb(e.detail.climbId));
-controller.addEventListener("resize", (e) => console.log(e.detail.height)); // iframe's content height, for auto-sizing
+controller.addEventListener("resize", (e) => console.log(e.detail.height));
 
-controller.setTopo(myTopoDocument); // safe to call before the iframe has loaded -- queued until it's ready
+controller.setTopo(myTopoDocument); // safe to call immediately -- queued internally until 'ready'
 controller.setHighlightedClimb(null);
 ```
 
-`TopoIframeController` extends `EventTarget` and dispatches the same `climb-hover`/`climb-click`
-event shapes as the web component, so host code can target either embedding mode through one
-interface. Messages sent before the iframe announces itself ready are queued and flushed
-automatically — no manual handshake needed. Like the web component, clicking a climb with a
-`link` set also opens it in a new tab, independent of the `climb-click` message.
-
-Raw protocol (`packages/core/src/iframe-protocol.ts`), if writing your own parent-side glue:
-
-| Direction | `type` | `payload` | Notes |
-|---|---|---|---|
-| parent → iframe | `init` / `set-topo` | `Topo` | Both do the same thing (mount/replace the document); `init` is accepted for semantic clarity on first load. |
-| parent → iframe | `set-highlighted-climb` | `{ climbId: string \| null }` | |
-| iframe → parent | `ready` | — | Announced once on load (and re-announced a few times briefly after, to cover a host listener attached after the message already fired). Anything sent before this is queued by `TopoIframeController`. |
-| iframe → parent | `climb-hover` | `{ climbId: string \| null }` | |
-| iframe → parent | `climb-click` | `{ climbId: string }` | |
-| iframe → parent | `resize` | `{ height: number }` | The document's rendered height, for a host that wants to auto-size the `<iframe>` element itself. |
-
-Every message carries `source: "climb-topo-viewer"` so handlers can ignore unrelated
-`postMessage` traffic on the page.
+It extends `EventTarget` and dispatches the same `climb-hover`/`climb-click` event shapes as the
+web component, so host code can target either embedding mode through one interface.

@@ -9,14 +9,12 @@ export interface StageScaffoldOptions {
    * 'width', this doesn't shrink the svg to the image's own aspect ratio — a consumer pairs
    * this with `Viewport.setContainerAspect` (via `onResize` below) so the *viewBox* itself
    * absorbs the aspect-ratio mismatch instead, letting the rendered box use 100% of the
-   * available screen space rather than being letterboxed down to a smaller inset box.
-   *
-   * 'page': like 'width', but clamped so the box never grows taller than whatever height the
-   * parent actually gives it (the parent must constrain height, e.g. via `height: 100%` up to
-   * a `100vh`/`100dvh` ancestor) — shrinking width to match rather than overflowing/scrolling.
-   * Right for a standalone viewer page, where nothing else on the page needs the space back.
+   * available screen space rather than being letterboxed down to a smaller inset box. This is
+   * also what lets zooming in actually use the full box: since the box itself already spans
+   * 100% of the available space, there's no separate outer letterbox for the content to be
+   * stuck inside of the way there would be if the box itself were shrunk to the image's shape.
    */
-  fit?: "width" | "contain" | "page";
+  fit?: "width" | "contain";
   /** 'contain' fit only: called with the root's rendered box size whenever it resizes
    *  (including once on initial mount), so the consumer can keep a Viewport's container
    *  aspect ratio (and anything sized off of it, like a full-coverage hit-test rect) in sync. */
@@ -113,55 +111,6 @@ export function createStageScaffold(
       });
       resizeObserver.observe(root);
       destroy = () => resizeObserver.disconnect();
-    }
-  } else if (fit === "page") {
-    // Fills the parent's box at first (same instant-approximation trade-off 'contain' below
-    // already makes -- briefly the wrong aspect ratio until the ResizeObserver corrects it to
-    // an exact pixel size). Plain CSS `aspect-ratio` can't do this on its own: this root has no
-    // in-flow content to size itself from (the svg is `position: absolute`), so `width/height:
-    // auto` would just collapse to zero instead of resolving from the aspect-ratio.
-    root.style.width = "100%";
-    root.style.height = "100%";
-    root.style.margin = "0 auto";
-    svg.style.position = "absolute";
-    svg.style.inset = "0";
-    svg.style.width = "100%";
-    svg.style.height = "100%";
-
-    if (typeof ResizeObserver !== "undefined") {
-      // Once corrected below, root's own box is pinned to explicit pixel values -- it no
-      // longer changes size on its own the way a percentage-based box would, so observing
-      // root itself (as the other two fit modes do) would never fire again on a later parent
-      // resize. Observe the *parent* instead, so the available box is what's actually being
-      // watched. The parent isn't attached yet at this point (the caller appends `root` right
-      // after this function returns), so grab it a tick later, once it is.
-      let last: { width: number; height: number } | null = null;
-      let resizeObserver: ResizeObserver | null = null;
-      let cancelled = false;
-      queueMicrotask(() => {
-        if (cancelled || !root.parentElement) return;
-        resizeObserver = new ResizeObserver((entries) => {
-          const box = entries[0]?.contentRect;
-          if (!box || !box.width || !box.height) return;
-          const imageAspect = image.width / image.height;
-          const boxAspect = box.width / box.height;
-          const { width, height } =
-            boxAspect > imageAspect
-              ? { height: box.height, width: box.height * imageAspect }
-              : { width: box.width, height: box.width / imageAspect };
-          // Skip the write if it wouldn't meaningfully change anything -- setting an equal
-          // size would otherwise re-trigger the observer for no reason.
-          if (last && Math.abs(width - last.width) < 0.5 && Math.abs(height - last.height) < 0.5) return;
-          last = { width, height };
-          root.style.width = `${width}px`;
-          root.style.height = `${height}px`;
-        });
-        resizeObserver.observe(root.parentElement);
-      });
-      destroy = () => {
-        cancelled = true;
-        resizeObserver?.disconnect();
-      };
     }
   } else {
     // 'contain': root and svg both simply fill whatever box the parent gives them. The
